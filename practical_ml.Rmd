@@ -1,0 +1,238 @@
+---
+title: "Week-4 practical machine learning"
+author: "Nikhitha beedala"
+date: "22/10/2020"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+Here is some good amazing zing zing...intro for u
+
+Aaj kal diff devics r used for data.Here i am expliining aboyut forth week assign of practical machie lerning.I hope u unaderstaning all this cudeeee.
+	
+```{r,warning=FALSE,message=FALSE,include=FALSE,echo=FALSE}
+	# vhbhjffdtyfgkhjhjhjhjhjhj
+	# cgghgushisdhiefheigjrogjrog
+	library(dplyr)
+	library(ggplot2)
+	library(DT)
+	library(caret)
+	library(knitr)
+	library(corrplot)
+	library(plotly)
+	library(correlationfunnel)
+	library(GGally)
+	library(e1071)
+	#library(rattle)
+	```
+	
+
+	
+
+	
+
+	```{r}
+	v_1 <- read.csv("C:\\Users\\HP\\Downloads\\pml-training.csv", stringsAsFactors = F,na.strings = c("","NA","#DIV/0!"))
+	v_2 <- read.csv("C:\\Users\\HP\\Downloads\\pml-testing.csv", stringsAsFactors = F,na.strings = c("","NA","#DIV/0!"))
+	dim(v_1); dim(v_2)
+	```
+	
+
+	
+
+	
+
+	```{r}
+	#for reproducability
+	set.seed(101)
+	v_3 <- createDataPartition(v_1$classe, p = 0.8, list = F)
+	v_6 <- v_1[-v_3,]
+	v_1 <- v_1[v_3,]
+	dim(v_1); dim(v_6)
+	```
+	
+
+	
+
+	```{r}
+	table(v_1$classe)/nrow(v_1)
+	```
+	
+
+	
+
+	```{r}
+	v_4 <- sapply(select(v_1,names(v_1)[grepl("_belt",names(v_1))]),
+	                    function(x) sum(is.na(x)))
+	v_4
+	```
+	
+
+	```{r}
+	v_5 <- sapply(select(v_1,names(v_1)[grepl("_arm",names(v_1))]),
+	                   function(x) sum(is.na(x)))
+	v_5
+	```  
+	
+
+	
+
+	```{r}
+	v_7 <- sapply(select(v_1,
+	                              names(v_1)[grepl("_forearm",names(v_1))]),
+	                       function(x) sum(is.na(x)))
+	v_7
+	```  
+	
+
+	```{r}
+	v_8 <- sapply(select(v_1,
+	                               names(v_1)[grepl("_dumbbell",names(v_1))]),
+	                        function(x) sum(is.na(x)))
+	v_8
+	``` 
+	
+
+	```{r}
+	v_9 <- c(names(v_4[v_4 != 0]), 
+	                  names(v_5[v_5 != 0]),
+	                  names(v_7[v_7 != 0]),
+	                  names(v_8[v_8 != 0]))
+	length(v_9)
+	```
+	
+
+	```{r}
+	#dropping the cols
+	v_10 <- tbl_df(v_1 %>% 
+	                      select(-v_9,
+	                             -c(X,user_name, raw_timestamp_part_1, 
+	                                raw_timestamp_part_2, cvtd_timestamp, 
+	                                new_window,num_window)))
+	v_10$classe <- as.factor(v_10$classe)
+	v_10[,1:52] <- lapply(v_10[,1:52],as.numeric)
+	dim(v_10)
+	```
+	
+
+	```{r,fig.height=10,fig.width=10}
+	v_11 <- cor(select(v_10, -classe))
+	diag(v_11) <- 0
+	v_11 <- which(abs(v_11)>0.8,arr.ind = T)
+	v_11 <- unique(row.names(v_11))
+	corrplot(cor(select(v_10,v_11)),
+	         type="upper", order="hclust",method = "number")
+	```
+	
+
+	```{r}
+	#nfbdyhfgyfhwuiiofjekj
+	#sjhgfaehfghfgurfhruigherjgheoi
+	v_12 <- v_10 %>% binarize(n_bins = 4, thresh_infreq = 0.01)
+	```
+	
+
+	```{r,fig.align="center",fig.width=8,fig.height=10}
+	v_13<- v_12 %>% correlate(target = classe__A) 
+	v_13%>% plot_correlation_funnel(interactive = T,limits = c(-0.5,0.5))
+	```
+	
+
+	```{r, echo=FALSE, eval=FALSE}
+	# cvfhyjsbsjxyhmj,kkdsbdhfykhj
+	v_14<- head(v_13%>% mutate(corr = abs(correlation)) %>% 
+	  arrange(desc(corr)) %>% select(feature) %>% unique(),20)
+	v_14$feature[which(v_14$feature %in% v_11)]
+	```
+	
+
+	```{r,fig.align="center",fig.width=8,fig.height=10}
+	v_15<- v_12 %>% correlate(target = classe__B)
+	v_15%>% plot_correlation_funnel(interactive = T,limits = c(-0.5,0.5))
+	```
+	
+
+	
+
+	```{r, echo=FALSE, eval=FALSE}
+	# vhejedodkecmd,cndkvnrkvj
+	v_16<- head(v_15%>% mutate(corr = abs(correlation)) %>% 
+	  arrange(desc(corr)) %>% select(feature) %>% unique(),20)
+	v_17$feature[which(v_17$feature %in% v_11)]
+	```
+	
+
+	
+
+	```{r,fig.align="center",fig.width=8,fig.height=10}
+	v_18<- v_12 %>% correlate(target = classe__C)
+	v_18%>% plot_correlation_funnel(interactive = T,limits = c(-0.5,0.5))
+	```
+	
+
+	```{r, echo=FALSE, eval=FALSE}
+	# this section is to find the top features for this classe which are not correlated with others
+	v_19<- head(v_18%>% mutate(corr = abs(correlation)) %>% 
+	  arrange(desc(corr)) %>% select(feature) %>% unique(),20)
+	v_20$feature[which(v_20$feature %in% v_11)]
+	```
+	
+
+	```{r,fig.align="center",fig.width=8,fig.height=10}
+	v_21<- v_12 %>% correlate(target = classe__D)
+	v_21%>% plot_correlation_funnel(interactive = T,limits = c(-0.5,0.5))
+	```
+	
+
+	```{r, echo=FALSE, eval=FALSE}
+	#ncmjhfgjrgtkgjntkhjytihjykbj
+	v_22<- head(v_21%>% mutate(corr = abs(correlation)) %>% 
+	  arrange(desc(corr)) %>% select(feature) %>% unique(),20)
+	v_22$feature[which(v_22$feature %in% v_11)]
+	```
+	
+
+	
+
+	```{r,fig.align="center",fig.width=8,fig.height=10}
+	v_23 <- v_12 %>% correlate(target = classe__E)
+	v_23 %>% plot_correlation_funnel(interactive = T,limits = c(-0.5,0.5))
+	```
+	
+
+	
+
+	```{r, echo=FALSE, eval=FALSE}
+	# this section is to find the top features for this classe which are not correlated with others
+	v_24 <- head(v_23 %>% mutate(corr = abs(correlation)) %>% 
+	  arrange(desc(corr)) %>% select(feature) %>% unique(),20)
+	v_24$feature[which(v_24$feature %in% v_11)]
+	```
+	
+
+	
+
+	```{r}
+	#subseting v_10
+	v_25 <- c("magnet_arm_x", "pitch_forearm" , "magnet_dumbbell_y", 
+	           "roll_forearm", "gyros_dumbbell_y") 
+	v_26<- c("magnet_dumbbell_y", "magnet_dumbbell_x" , "roll_dumbbell" , 
+	           "magnet_belt_y" , "accel_dumbbell_x" )
+	v_27 <- c("magnet_dumbbell_y", "roll_dumbbell" , "accel_dumbbell_y" , 
+	           "magnet_dumbbell_x", "magnet_dumbbell_z")
+	v_28 <- c("pitch_forearm" , "magnet_arm_y" , "magnet_forearm_x",
+	           "accel_dumbbell_y", "accel_forearm_x")
+	v_29 <- c("magnet_belt_y" , "magnet_belt_z" , "roll_belt", 
+	           "gyros_belt_z" , "magnet_dumbbell_y")
+	flsks_cols_qwef <- character()
+	for(c in c(v_25,v_26,v_27,v_28,v_29)){
+	  flsks_cols_qwef <- union(flsks_cols_qwef, c)
+	}
+	v_102 <- v_10 %>% select(flsks_cols_qwef, classe)
+	data.frame("arm" = sum(grepl("_arm",flsks_cols_qwef)), 
+	           "forearm" = sum(grepl("_forearm",flsks_cols_qwef)),
+	           "belt" = sum(grepl("_belt",flsks_cols_qwef)),
+	           "dumbbell" = sum(grepl("_dumbbell",flsks_cols_qwef)))
+	```
